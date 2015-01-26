@@ -1,0 +1,26 @@
+{% extends "layout.jinja2" %}
+
+{% block scripts %}
+	<script type="text/javascript" src={{ url_for('static', filename='index.js') }}></script>
+{% endblock %}
+
+{% block content %}
+	<div id="lookup_area">
+		<form id="lookup_form" action={{ url_for('lookup')|tojson }} method="post">
+			<input type="text" id="query_entry" name="queries">
+			<input type="submit" value="go">
+		</form>
+
+		<select class="lang_selector" id="langfrom_selector" 
+		name="lang_from" form="lookup_form">
+		{% for lang in langs_from %}
+			<option value={{ lang|tojson }}>{{ lang }}</option>
+		{% endfor %}
+		</select>
+
+		<select class="lang_selector" id="langto_selector" name="lang_to" 
+		form="lookup_form"></select>
+
+		<div id="results"></div>
+	</div>
+{% endblock %}

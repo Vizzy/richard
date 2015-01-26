@@ -1,0 +1,60 @@
+header
+{
+	text-align: center;
+	font-family: 'PT Sans', Helvetica, Sans-Serif;
+	font-weight: lighter;
+	font-size: 2em;
+}
+
+a
+{
+	text-decoration: none;
+	color: #ff1919;
+}
+
+a:hover
+{
+	background-color: #ff1919;
+	color: white;
+	-webkit-transition-duration: 1s;
+	transition-duration: 1s;
+}
+
+#lookup_area
+{
+	font-family: 'PT Sans', Helvetica, Sans-Serif;
+	font-size: 1.5em;
+	text-align: center;
+}
+
+#lookup_form
+{
+	font-family: 'PT Sans', Helvetica, Sans-Serif;
+	font-size: 1.5em;
+	text-align: center;
+}
+
+#query_entry
+{
+	font-family: 'PT Sans', Helvetica, Sans-Serif;
+	font-size: 1.5em;
+}
+
+.lang_selector
+{
+	font-size: 1.5em;
+}
+
+#results
+{
+	font-family: 'PT Sans', Helvetica, Sans-Serif;
+	font-size: 1.3em;
+	text-align: center;
+}
+
+footer
+{
+	text-align: center;
+	font-family: 'PT Sans', Helvetica, Sans-Serif;
+	font-size: 1.5em;
+}
