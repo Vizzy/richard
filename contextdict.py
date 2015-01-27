@@ -1,154 +1,231 @@
 #!/usr/bin/env python3.4
 
 import urllib.parse as urlparse
-from itertools import filterfalse, chain
+from itertools import filterfalse, chain, starmap
 from collections import defaultdict
 from multiprocessing.pool import Pool
+import os
+from difflib import SequenceMatcher
 
 import requests
 import simplejson as json
 
 class UnsupportedLanguageException(ValueError):
-	pass
+    pass
 
 class CrossLookup:
-	def __init__(self, apikey, translate_key=None):
-		self._base_url = 'https://dictionary.yandex.net/api/v1/dicservice.json/'
-		self.apikey = apikey
-		self.translate_key = translate_key
-		r = requests.get(urlparse.urljoin(self._base_url, 'getLangs'),
-				params=dict(key=apikey))
-		self.supported_langs = json.loads(r.text)
+    def __init__(self, apikey, translate_key=None):
+        self._base_url = 'https://dictionary.yandex.net/api/v1/dicservice.json/'
+        self.apikey = apikey
+        self.translate_key = translate_key
+        r = requests.get(urlparse.urljoin(self._base_url, 'getLangs'),
+                params=dict(key=apikey))
+        self.supported_langs = json.loads(r.text)
 
-		self.supported_directions = defaultdict(list)
-		for pair in self.supported_langs:
-			split_pair = pair.split('-')
-			self.supported_directions[split_pair[0]].append(split_pair[1])
-
-
-	def lookup(self, query, lang_from, lang_to, interface_lang='en'):
-		lang = lang_from + '-' + lang_to
-		if lang not in self.supported_langs:
-			raise UnsupportedLanguageException
-
-		payload = {'key': self.apikey, 'lang': lang,
-					'text': query, 'ui': interface_lang}
-		r = requests.get(urlparse.urljoin(self._base_url, 'lookup'),
-				params=payload)
-		result = json.loads(r.text)
-		return result
-
-	def lookup_translate(self, query, lang_from, lang_to):
-		lang = lang_from + '-' + lang_to
-		#if lang not in self.supported_langs:
-		#	raise UnsupportedLanguageException
-
-		payload = {'key': self.translate_key, 'lang': lang,
-					'text': query}
-		r = requests.get('https://translate.yandex.net/api/v1.5/tr.json/translate',
-				params=payload)
-		result = json.loads(r.text)
-		return result
+        self.supported_directions = defaultdict(list)
+        for pair in self.supported_langs:
+            split_pair = pair.split('-')
+            self.supported_directions[split_pair[0]].append(split_pair[1])
 
 
-	def crossword_lookup(self, synonyms, lang_from, lang_to, 
-						interface_lang, pos=()):
+    def lookup(self, query, lang_from, lang_to, interface_lang='en'):
+        lang = lang_from + '-' + lang_to
+        if lang not in self.supported_langs:
+            raise UnsupportedLanguageException
 
-		translations = []
-		smarter_translations = []
-		
-		p = Pool()
-		results = p.starmap(self.lookup,
-						 ((s, lang_from, lang_to) for s in synonyms))
-		translations_by_pos = chain.from_iterable((r['def'] for r in results))
+        payload = {'key': self.apikey, 'lang': lang,
+                    'text': query, 'ui': interface_lang}
+        r = requests.get(urlparse.urljoin(self._base_url, 'lookup'),
+                params=payload)
+        result = json.loads(r.text)
+        return result
 
-		# filter by part of speech
-		if list(iter(pos)) != []:
-			translations_by_pos = filter(
-										lambda x: x['pos'] in pos, 
-										translations_by_pos)
+    def lookup_translate(self, query, lang_from, lang_to):
+        lang = lang_from + '-' + lang_to
+        #if lang not in self.supported_langs:
+        #   raise UnsupportedLanguageException
 
-		# filter by additional meanings
+        payload = {'key': self.translate_key, 'lang': lang,
+                    'text': query}
+        r = requests.get('https://translate.yandex.net/api/v1.5/tr.json/translate',
+                params=payload)
+        result = json.loads(r.text)
+        return result
 
-		for tps in translations_by_pos:
-			for translation in tps['tr']:
-				try:
-					meanings = [m['text'] for m in translation['mean']]
-					for s in synonyms:
-						remaining_synonyms = synonyms[:]
-						remaining_synonyms.remove(s)
-						intersection = set(meanings).intersection(remaining_synonyms)
-						# see if there are any intersections between synonyms and meanings
-						if len(intersection) is not 0:
-							smarter_translations.append(translation)
-				except KeyError:
-					# there are no meanings provided in the results
-					pass
-				finally:
-					translations.append(translation)
+    def partially_in(self, iterable, query):
+        seqmatcher = SequenceMatcher(isjunk=None, b=query)
+        threshold = 0.6
+
+        for e in iterable:
+            seqmatcher.set_seq1(e)
+            if seqmatcher.quick_ratio() > threshold:
+                return True
+        else:
+            return False
 
 
-		# check for overlaps between translations
-		texts = [t['text'] for t in translations]
-		synonyms = [syn['text'] for syn in
-					 [t.get('synonyms') for t in translations]
-					 if syn]
+    def meaning_overlaps(self, queries, translations):
+        overlaps = []
 
-		words = texts + synonyms
+        for t in translations:
+            meanings = (m['text'] for m in t.get('mean', ()))
+            examples = (ex['text'] for ex in t.get('ex', ()))
+            for query in queries:
+                partial_matches = starmap(self.partially_in,
+                            ((meanings, query), 
+                            (examples, query)))
 
-		multiple_occurences = filter(lambda t: words.count(t['text']) > 1,
-					 				translations + smarter_translations)
+                if True in partial_matches:
+                    # there is a partial match
+                    overlaps.append(t)
+        else:
+            # there are no matches between other queries
+            pass
 
-		smarter_translations += list(multiple_occurences)
+        return overlaps
 
-		if len(smarter_translations) > 0:
-			keys = []
-			results = []
-			for t in smarter_translations:
-				if t['text'] not in keys:
-					results.append(t)
-					keys.append(t['text'])
-		else:
-			results = translations
-		
-		return results
+    @staticmethod
+    def translation_overlaps(strings):
+        narrow = []
 
-	def cross_lang_lookup(self, queries, lang_to, pos=()):
-		p = Pool()
-		try:
-			results = p.starmap(self.lookup,
-						((q[0], q[1], lang_to) for q in queries))
-			translations_by_pos = chain.from_iterable((r['def'] for r in results))
-		except UnsupportedLanguageException:
-			results = p.starmap(self.lookup_translate,
-						((q[0], q[1], lang_to) for q in queries))
-			translations_by_pos = chain.from_iterable(results)
+        # work out the average occurence of each translation
+        occs = set((strings.count(s)/len(strings) for s in strings))
+        avg_occ = sum(occs)/len(occs)
 
-		
+        # are there any overlaps at all?
+        if avg_occ <= 1/len(strings):
+            return narrow
 
-		# filter by part of speech
-		if list(iter(pos)) != []:
-			translations_by_pos = filter(
-										lambda x: x['pos'] in pos, 
-										translations_by_pos)
+        for s in strings:
 
-		translations = []
+            # does it occur a lot (i.e. above average)?
+            if strings.count(s)/len(strings) >= avg_occ:
+                narrow.append(s)
 
-		for tps in translations_by_pos:
-			for translation in tps['tr']:
-				translations.append(translation)
+        return narrow
 
-		# check for overlaps between translations
-		texts = [t['text'] for t in translations]
 
-		multiple_occurences = filter(lambda t: texts.count(t['text']) > 1,
-					 				translations)
+    def crossword_lookup(self, queries, lang_from, lang_to, 
+                        interface_lang='en', pos=(), unique=True):
 
-		keys = []
-		results = []
-		for t in multiple_occurences:
-			if t['text'] not in keys:
-				results.append(t)
-				keys.append(t['text'])
+        queries = list(queries)
 
-		return results
+        translations = []
+        clever_translations = []
+
+        processes = len(queries) if len(queries) <= os.cpu_count() else os.cpu_count()
+        with Pool(processes=processes) as p:
+            results = p.starmap(self.lookup,
+                         ((q, lang_from, lang_to) for q in queries))
+            
+        translations_by_pos = chain.from_iterable((r['def'] for r in results))
+
+        # filter by part of speech
+        if list(iter(pos)) != []:
+            translations_by_pos = filter(
+                                        lambda x: x['pos'] in pos, 
+                                        translations_by_pos)
+
+
+        # goodbye, laziness
+        translations_by_pos = list(translations_by_pos)
+
+        if len(translations_by_pos) is 0:
+            # no translations were found
+            return [], False
+
+        # filter by meanings and examples
+        for tbps in translations_by_pos:
+            remaining_queries = queries[:]
+            try:
+                remaining_queries.remove(tbps['text'].casefold())
+            except ValueError:
+                # work this out later (accents etc.)
+                ...
+            overlaps = self.meaning_overlaps(remaining_queries, tbps['tr'])
+            if len(overlaps) > 0:
+                tbps['tr'] = overlaps
+                clever_translations.append(tbps)
+
+        all_translations = chain.from_iterable([tbps['tr'] 
+                            for tbps in translations_by_pos])
+
+        translation_strings = [s['text'] for s in all_translations]
+        narrow = self.translation_overlaps(translation_strings)
+
+        if len(narrow) > 0:
+            for tbps in translations_by_pos:
+                overlapping_translations = [translation 
+                            for translation in tbps['tr']
+                            if translation['text'] in narrow]
+                tbps['tr'] = overlapping_translations
+                clever_translations.append(tbps)
+
+        if len(clever_translations) > 0:
+
+            # filter 'empty' translations
+            # i.e. those which have been filtered out above
+            clever_translations = list(filter(lambda x: len(x['tr']) > 0,
+                                                clever_translations))
+            if unique:
+                unique_translations = []
+                keys = []
+                examples = []
+
+                for transs in clever_translations:
+                    for t in transs['tr']:
+                        if t['text'] not in keys:
+                            keys.append(t['text'])
+                            unique_translations.append(transs)
+                        example = t.get('ex')
+                        if example:
+                            examples.append(example)
+
+                unique_translations[-1]['tr'][-1]['ex'] = examples
+
+
+                clever_translations = unique_translations
+
+            return clever_translations, True
+        else:
+            return results[0]['def'], False
+
+    def cross_lang_lookup(self, queries, lang_to, pos=()):
+        p = Pool()
+        try:
+            results = p.starmap(self.lookup,
+                        ((q[0], q[1], lang_to) for q in queries))
+            translations_by_pos = chain.from_iterable((r['def'] for r in results))
+        except UnsupportedLanguageException:
+            results = p.starmap(self.lookup_translate,
+                        ((q[0], q[1], lang_to) for q in queries))
+            translations_by_pos = chain.from_iterable(results)
+
+        
+
+        # filter by part of speech
+        if list(iter(pos)) != []:
+            translations_by_pos = filter(
+                                        lambda x: x['pos'] in pos, 
+                                        translations_by_pos)
+
+        translations = []
+
+        for tps in translations_by_pos:
+            for translation in tps['tr']:
+                translations.append(translation)
+
+        # check for overlaps between translations
+        texts = [t['text'] for t in translations]
+
+        multiple_occurences = filter(lambda t: texts.count(t['text']) > 1,
+                                    translations)
+
+        keys = []
+        results = []
+        for t in multiple_occurences:
+            if t['text'] not in keys:
+                results.append(t)
+                keys.append(t['text'])
+
+        return results

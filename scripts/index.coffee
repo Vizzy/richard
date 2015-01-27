@@ -33,11 +33,26 @@ $(document).ready =>
 
 		$.post('lookup/', payload).done (data) =>
 			results = JSON.parse data
+
 			$results_div = $('#results')
+
 			$results_div.hide 200, () ->
 				$results_div.empty()
 				for r in results
-					$results_div.append('<p> [' + r['pos'] + '] ' + r['text'] + '</div>')
+					if r['tr'] isnt undefined			
+						for t in r['tr']
+							$results_line = $('<p></p>')
+
+							for key, value of t
+
+								if key is 'pos'
+									$results_line.append '[' + value + '] '
+								else if key is 'text'
+									$results_line.append value
+								else
+									console.log key, value
+
+							$results_div.append $results_line
 
 				$results_div.fadeIn 200
 

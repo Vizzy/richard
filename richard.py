@@ -39,7 +39,7 @@ def lookup():
 
 	if as_json:
 		# for some reason flask's jsonify dies on this
-		return json.dumps(result, ensure_ascii=False)
+		return json.dumps(result[0], ensure_ascii=False)
 	else:
 		return abort(501)
 
