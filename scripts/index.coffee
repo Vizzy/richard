@@ -50,7 +50,8 @@ $(document).ready =>
 								else if key is 'text'
 									$results_line.append value
 								else
-									console.log key, value
+									if $DEBUG
+										console.log key, value
 
 							$results_div.append $results_line
 

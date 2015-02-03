@@ -4,6 +4,7 @@ from pathlib import Path
 
 from richard import app
 import coffeescript
+import sys
 
 def compile_coffee(coffee_path='scripts', output_path='static'):
 	path = Path(coffee_path)
@@ -18,4 +19,5 @@ def compile_coffee(coffee_path='scripts', output_path='static'):
 
 if __name__ == '__main__':
 	compile_coffee()
-	app.run(debug=True, host='localhost', port=3000)
+	debug = '-d' in sys.argv
+	app.run(debug=debug, host='localhost', port=3000)

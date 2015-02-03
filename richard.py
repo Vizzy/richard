@@ -19,7 +19,6 @@ def inject_layout_defaults():
 				author='anton osten')
 
 
-
 @app.route('/')
 def home():
 	langs_from = caw.supported_directions.keys()
