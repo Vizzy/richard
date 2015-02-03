@@ -4,6 +4,7 @@ import urllib.parse as urlparse
 from itertools import filterfalse, chain, starmap
 from collections import defaultdict
 from multiprocessing.pool import Pool
+from concurrent import futures
 import os
 from difflib import SequenceMatcher
 
@@ -18,14 +19,23 @@ class CrossLookup:
         self._base_url = 'https://dictionary.yandex.net/api/v1/dicservice.json/'
         self.apikey = apikey
         self.translate_key = translate_key
+        self.__get_languages()
+        executor = futures.ThreadPoolExecutor(max_workers=1)
+        executor.submit(self.__get_languages)
+
+    def __get_languages(self):
         r = requests.get(urlparse.urljoin(self._base_url, 'getLangs'),
-                params=dict(key=apikey))
+                params=dict(key=self.apikey))
         self.supported_langs = json.loads(r.text)
 
         self.supported_directions = defaultdict(list)
         for pair in self.supported_langs:
             split_pair = pair.split('-')
             self.supported_directions[split_pair[0]].append(split_pair[1])
+
+    @staticmethod
+    def num_workers(queries):
+        return len(queries) if len(queries) <= os.cpu_count() else os.cpu_count()
 
 
     def lookup(self, query, lang_from, lang_to, interface_lang='en'):
@@ -52,13 +62,12 @@ class CrossLookup:
         result = json.loads(r.text)
         return result
 
-    def partially_in(self, iterable, query):
+    def partially_in(self, iterable, query, threshold=0.8):
         seqmatcher = SequenceMatcher(isjunk=None, b=query)
-        threshold = 0.6
 
         for e in iterable:
             seqmatcher.set_seq1(e)
-            if seqmatcher.quick_ratio() > threshold:
+            if seqmatcher.quick_ratio() >= threshold:
                 return True
         else:
             return False
@@ -66,21 +75,23 @@ class CrossLookup:
 
     def meaning_overlaps(self, queries, translations):
         overlaps = []
+        num_workers = self.num_workers(queries)
 
-        for t in translations:
-            meanings = (m['text'] for m in t.get('mean', ()))
-            examples = (ex['text'] for ex in t.get('ex', ()))
-            for query in queries:
-                partial_matches = starmap(self.partially_in,
-                            ((meanings, query), 
-                            (examples, query)))
+        with futures.ProcessPoolExecutor(max_workers=num_workers) as e:
+            for t in translations:
+                meanings = [m['text'] for m in t.get('mean', [])]
+                examples = [ex['text'] for ex in t.get('ex', [])]
+                for query in queries:
+                    partial_matches = e.map(self.partially_in,
+                                            (meanings, examples),
+                                            (query, query))
 
-                if True in partial_matches:
-                    # there is a partial match
-                    overlaps.append(t)
-        else:
-            # there are no matches between other queries
-            pass
+                    if True in partial_matches:
+                        # there is a partial match
+                        overlaps.append(t)
+            else:
+                # there are no overlaps between query results
+                pass
 
         return overlaps
 
@@ -113,10 +124,12 @@ class CrossLookup:
         translations = []
         clever_translations = []
 
-        processes = len(queries) if len(queries) <= os.cpu_count() else os.cpu_count()
-        with Pool(processes=processes) as p:
-            results = p.starmap(self.lookup,
-                         ((q, lang_from, lang_to) for q in queries))
+        workers = self.num_workers(queries)
+        with futures.ProcessPoolExecutor(max_workers=workers) as e:
+                results = e.map(self.lookup,
+                            queries, (lang_from for x in range(len(queries))),
+                            (lang_to for x in range(len(queries))))
+                results = list(results)
             
         translations_by_pos = chain.from_iterable((r['def'] for r in results))
 
