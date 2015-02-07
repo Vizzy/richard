@@ -6,3 +6,5 @@ config.py
 *.js
 
 richenv
+
+nc_*
