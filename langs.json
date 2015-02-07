@@ -1,0 +1,222 @@
+[
+    {
+        "iso_code": "ar",
+        "ru": "арабский",
+        "en": "Arabic"
+    },
+    {
+        "iso_code": "az",
+        "ru": "азербайджанский",
+        "en": "Azerbaijani"
+    },
+    {
+        "iso_code": "be",
+        "ru": "белорусский",
+        "en": "Belarusian"
+    },
+    {
+        "iso_code": "bg",
+        "ru": "болгарский",
+        "en": "Bulgarian"
+    },
+    {
+        "iso_code": "bs",
+        "ru": "боснийский",
+        "en": "Bosnian"
+    },
+    {
+        "iso_code": "ca",
+        "ru": "каталанский",
+        "en": "Catalan; Valencian"
+    },
+    {
+        "iso_code": "cs",
+        "ru": "чешский",
+        "en": "Czech"
+    },
+    {
+        "iso_code": "da",
+        "ru": "датский",
+        "en": "Danish"
+    },
+    {
+        "iso_code": "de",
+        "ru": "немецкий",
+        "en": "German"
+    },
+    {
+        "iso_code": "el",
+        "ru": "греческий",
+        "en": "Greek"
+    },
+    {
+        "iso_code": "en",
+        "ru": "английский",
+        "en": "English"
+    },
+    {
+        "iso_code": "es",
+        "ru": "испанский",
+        "en": "Spanish"
+    },
+    {
+        "iso_code": "et",
+        "ru": "эстонский",
+        "en": "Estonian"
+    },
+    {
+        "iso_code": "fi",
+        "ru": "финский",
+        "en": "Finnish"
+    },
+    {
+        "iso_code": "fr",
+        "ru": "французский",
+        "en": "French"
+    },
+    {
+        "iso_code": "he",
+        "ru": "иврит",
+        "en": "Hebrew"
+    },
+    {
+        "iso_code": "hr",
+        "ru": "хорватский",
+        "en": "Croatian"
+    },
+    {
+        "iso_code": "hu",
+        "ru": "венгерский",
+        "en": "Hungarian"
+    },
+    {
+        "iso_code": "hy",
+        "ru": "армянский",
+        "en": "Armenian"
+    },
+    {
+        "iso_code": "id",
+        "ru": "индонезийский",
+        "en": "Indonesian"
+    },
+    {
+        "iso_code": "is",
+        "ru": "исландский",
+        "en": "Icelandic"
+    },
+    {
+        "iso_code": "it",
+        "ru": "итальянский",
+        "en": "Italian"
+    },
+    {
+        "iso_code": "ka",
+        "ru": "грузинский",
+        "en": "Georgian"
+    },
+    {
+        "iso_code": "lt",
+        "ru": "литовский",
+        "en": "Lithuanian"
+    },
+    {
+        "iso_code": "lv",
+        "ru": "латышский",
+        "en": "Latvian"
+    },
+    {
+        "iso_code": "mk",
+        "ru": "македонский",
+        "en": "Macedonian"
+    },
+    {
+        "iso_code": "ms",
+        "ru": "малайский",
+        "en": "Malay"
+    },
+    {
+        "iso_code": "mt",
+        "ru": "мальтийский",
+        "en": "Maltese"
+    },
+    {
+        "iso_code": "nl",
+        "ru": "голландский",
+        "en": "Dutch"
+    },
+    {
+        "iso_code": "no",
+        "ru": "норвежский",
+        "en": "Norwegian"
+    },
+    {
+        "iso_code": "pl",
+        "ru": "польский",
+        "en": "Polish"
+    },
+    {
+        "iso_code": "pt",
+        "ru": "португальский",
+        "en": "Portuguese"
+    },
+    {
+        "iso_code": "ro",
+        "ru": "румынский",
+        "en": "Romanian"
+    },
+    {
+        "iso_code": "ru",
+        "ru": "русский",
+        "en": "Russian"
+    },
+    {
+        "iso_code": "sk",
+        "ru": "словацкий",
+        "en": "Slovak"
+    },
+    {
+        "iso_code": "sl",
+        "ru": "словенский",
+        "en": "Slovenian"
+    },
+    {
+        "iso_code": "sq",
+        "ru": "албанский",
+        "en": "Albanian"
+    },
+    {
+        "iso_code": "sr",
+        "ru": "сербский",
+        "en": "Serbian"
+    },
+    {
+        "iso_code": "sv",
+        "ru": "шведский",
+        "en": "Swedish"
+    },
+    {
+        "iso_code": "th",
+        "ru": "тайский",
+        "en": "Thai"
+    },
+    {
+        "iso_code": "tr",
+        "ru": "турецкий",
+        "en": "Turkish"
+    },
+    {
+        "iso_code": "uk",
+        "ru": "украинский",
+        "en": "Ukrainian"
+    },
+    {
+        "iso_code": "vi",
+        "ru": "вьетнамский",
+        "en": "Vietnamese"
+    },
+    {
+        "iso_code": "zh",
+        "ru": "китайский",
+        "en": "Chinese"
+    }
+]
