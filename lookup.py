@@ -1,5 +1,3 @@
-#!/usr/bin/env python3.4
-
 import urllib.parse as urlparse
 from itertools import filterfalse, chain, starmap
 from collections import defaultdict
@@ -19,16 +17,18 @@ class CrossLookup:
         self._base_url = 'https://dictionary.yandex.net/api/v1/dicservice.json/'
         self.apikey = apikey
         self.translate_key = translate_key
-        self.__get_languages()
+        self.supported_directions = defaultdict(list)
+        self.supported_langs = []
+
         executor = futures.ThreadPoolExecutor(max_workers=1)
         executor.submit(self.__get_languages)
+
 
     def __get_languages(self):
         r = requests.get(urlparse.urljoin(self._base_url, 'getLangs'),
                 params=dict(key=self.apikey))
         self.supported_langs = json.loads(r.text)
 
-        self.supported_directions = defaultdict(list)
         for pair in self.supported_langs:
             split_pair = pair.split('-')
             self.supported_directions[split_pair[0]].append(split_pair[1])
