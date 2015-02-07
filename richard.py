@@ -1,6 +1,7 @@
 from flask import (Flask, request, render_template,
 					 jsonify, abort, json)
-from contextdict import CrossLookup
+from lookup import CrossLookup
+from collections import defaultdict
 
 app = Flask('richard')
 app.config.from_object('config')
@@ -8,10 +9,18 @@ app.config.from_object('config')
 caw = CrossLookup(apikey=app.config['DICT_APIKEY'], 
 				  translate_key=app.config['TRNSL_APIKEY'])
 
+with open('langs.json') as langsfile:
+	lang_names = json.load(langsfile)
 
 def get_lang():
 	# make it actually work out the language
-	return 'en'
+	return request.args.get('lang', 'en')
+
+def humanise_lang_name(lang_code, interface_lang):
+	for ln in lang_names:
+		if lang_code == ln['iso_code']:
+			return ln[interface_lang]
+
 
 @app.context_processor
 def inject_layout_defaults():
@@ -21,7 +30,8 @@ def inject_layout_defaults():
 
 @app.route('/')
 def home():
-	langs_from = caw.supported_directions.keys()
+	langs_from = {key: humanise_lang_name(key, get_lang()) 
+					for key in caw.supported_directions.keys()}
 	return render_template('index.jinja2', langs_from=langs_from)
 
 @app.route('/lookup/', methods=('POST',))
@@ -45,6 +55,14 @@ def lookup():
 
 @app.route('/get_lang_pairs/')
 def get_lang_pairs():
-	return jsonify(caw.supported_directions)
+	directions = caw.supported_directions
+	lang = get_lang()
+	lang_pairs = {key: {'name': humanise_lang_name(key, lang), 
+						'targets': value}
+					for key, value in directions.items()}
 
+	return jsonify(lang_pairs)
 
+@app.route('/get_lang_names/')
+def get_lang_names():
+	return jsonify(lang_names)
