@@ -1,28 +1,40 @@
+humanise_lang_name = (lang_code) ->
+	lang_pairs = JSON.parse localStorage.getItem 'langs'
+
+	for lang of lang_pairs
+		if lang is lang_code
+			return lang_pairs[lang_code]['name']
+
+get_langs = ->
+	$.getJSON 'get_lang_pairs', (data) =>
+		localStorage.setItem('langs', JSON.stringify data)
+		update_available_langs()
+
+
 update_available_langs = ->
-	selected_lang = $('#langfrom_selector option:selected').text()
+	selected_lang = $('#langfrom_selector option:selected').val()
 	$('#langto_selector').empty()
 
 	lang_pairs = JSON.parse localStorage.getItem 'langs'
 
-	for lang in lang_pairs[selected_lang]
+	for lang in lang_pairs[selected_lang]['targets']
 		$new_lang_option = $('<option></option>')
 		$new_lang_option.attr('value', lang)
-		$new_lang_option.text lang
+		$new_lang_option.text(humanise_lang_name lang)
 
 		$('#langto_selector').append $new_lang_option
 
 $(document).ready =>
-	$.getJSON 'get_lang_pairs', (data) =>
-		localStorage.setItem('langs', JSON.stringify data)
-		update_available_langs()
+
+	get_langs()
 
 	$('#langfrom_selector').change =>
 		update_available_langs()
 
 	$('#lookup_form').submit (event) =>
 
-		lang_from = $('#langfrom_selector option:selected').text()
-		lang_to = $('#langto_selector option:selected').text()
+		lang_from = $('#langfrom_selector option:selected').val()
+		lang_to = $('#langto_selector option:selected').val()
 		query = $('#query_entry').val()
 
 		payload =

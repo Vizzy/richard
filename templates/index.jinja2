@@ -13,12 +13,13 @@
 
 		<select class="lang_selector" id="langfrom_selector" 
 		name="lang_from" form="lookup_form">
-		{% for lang in langs_from %}
-			<option value={{ lang|tojson }}>{{ lang }}</option>
+		{% for key, value in langs_from.items() %}
+			<option value={{ key|tojson }}>{{ value }}</option>
+			}
 		{% endfor %}
 		</select>
 
-		<select class="lang_selector" id="langto_selector" name="lang_to" 
+		<select class="lang_selector" id="langto_selector" name="lang_to"
 		form="lookup_form"></select>
 
 		<div id="results"></div>
