@@ -50,20 +50,19 @@ $(document).ready =>
 
 			$results_div.hide 200, () ->
 				$results_div.empty()
-				for r in results
-					if r['tr'] isnt undefined			
-						for t in r['tr']
-							$results_line = $('<p></p>')
+				if results['tr'] isnt undefined			
+					for t in results['tr']
+						$results_line = $('<p></p>')
 
-							for key, value of t
+						for key, value of t
 
-								if key is 'pos'
-									$results_line.append '[' + value + '] '
-								else if key is 'text'
-									$results_line.append value
-								else
-									if $DEBUG
-										console.log key, value
+							if key is 'pos'
+								$results_line.append '[' + value + '] '
+							else if key is 'text'
+								$results_line.append value
+							else
+								if $DEBUG
+									console.log key, value
 
 							$results_div.append $results_line
 

@@ -66,8 +66,7 @@ def get_lang_pairs():
 	lang = get_lang()
 	lang_pairs = {key: {'name': humanise_lang_name(key, lang), 
 						'targets': sort_lang_codes(value)}
-					for key, value in directions.items()}
-					
+					for key, value in directions.items()}				
 
 	return jsonify(lang_pairs)
 

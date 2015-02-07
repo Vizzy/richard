@@ -99,7 +99,7 @@ class CrossLookup:
     def translation_overlaps(strings):
         narrow = []
 
-        # work out the average occurence of each translation
+        # work out the average occurrence of each translation
         occs = set((strings.count(s)/len(strings) for s in strings))
         avg_occ = sum(occs)/len(occs)
 
@@ -125,7 +125,7 @@ class CrossLookup:
         clever_translations = []
 
         workers = self.num_workers(queries)
-        with futures.ProcessPoolExecutor(max_workers=workers) as e:
+        with futures.ThreadPoolExecutor(max_workers=len(queries)) as e:
                 results = e.map(self.lookup,
                             queries, (lang_from for x in range(len(queries))),
                             (lang_to for x in range(len(queries))))
@@ -189,19 +189,18 @@ class CrossLookup:
                     for t in transs['tr']:
                         if t['text'] not in keys:
                             keys.append(t['text'])
-                            unique_translations.append(transs)
+                            unique_translations.append(t)
                         example = t.get('ex')
                         if example:
                             examples.append(example)
 
-                unique_translations[-1]['tr'][-1]['ex'] = examples
-
+                unique_translations[-1]['ex'] = examples
 
                 clever_translations = unique_translations
 
-            return clever_translations, True
+            return {'tr': clever_translations}, True
         else:
-            return results[0]['def'], False
+            return results[0]['def'][0], False
 
     def cross_lang_lookup(self, queries, lang_to, pos=()):
         p = Pool()
