@@ -13,8 +13,8 @@
 
 		<select class="lang_selector" id="langfrom_selector" 
 		name="lang_from" form="lookup_form">
-		{% for key, value in langs_from.items() %}
-			<option value={{ key|tojson }}>{{ value }}</option>
+		{% for code, name in langs_from %}
+			<option value={{ code|tojson }}>{{ name }}</option>
 			}
 		{% endfor %}
 		</select>

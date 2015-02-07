@@ -30,8 +30,9 @@ def inject_layout_defaults():
 
 @app.route('/')
 def home():
-	langs_from = {key: humanise_lang_name(key, get_lang()) 
-					for key in caw.supported_directions.keys()}
+	langs_from = sorted([(code, humanise_lang_name(code, get_lang())) 
+						for code in caw.supported_directions.keys()],
+						key=lambda x: x[1])
 	return render_template('index.jinja2', langs_from=langs_from)
 
 @app.route('/lookup/', methods=('POST',))
@@ -57,9 +58,19 @@ def lookup():
 def get_lang_pairs():
 	directions = caw.supported_directions
 	lang = get_lang()
-	lang_pairs = {key: {'name': humanise_lang_name(key, lang), 
-						'targets': value}
-					for key, value in directions.items()}
+	lang_pairs = {key: {
+						'name': humanise_lang_name(key, lang), 
+						'targets': 
+							sorted(
+								value, 
+								key=lambda code: humanise_lang_name(code, lang))
+						}
+					for key, value in 
+					sorted(
+						directions.items(), 
+						key=lambda item: humanise_lang_name(item[0], lang))
+					}
+					
 
 	return jsonify(lang_pairs)
 
