@@ -21,6 +21,12 @@ def humanise_lang_name(lang_code, interface_lang):
 		if lang_code == ln['iso_code']:
 			return ln[interface_lang]
 
+def sort_lang_codes(lang_codes):
+	lang = get_lang()
+	sorted_names = sorted(lang_codes,
+	 key=lambda code: humanise_lang_name(code, lang))
+	return sorted_names
+
 
 @app.context_processor
 def inject_layout_defaults():
@@ -58,18 +64,9 @@ def lookup():
 def get_lang_pairs():
 	directions = caw.supported_directions
 	lang = get_lang()
-	lang_pairs = {key: {
-						'name': humanise_lang_name(key, lang), 
-						'targets': 
-							sorted(
-								value, 
-								key=lambda code: humanise_lang_name(code, lang))
-						}
-					for key, value in 
-					sorted(
-						directions.items(), 
-						key=lambda item: humanise_lang_name(item[0], lang))
-					}
+	lang_pairs = {key: {'name': humanise_lang_name(key, lang), 
+						'targets': sort_lang_codes(value)}
+					for key, value in directions.items()}
 					
 
 	return jsonify(lang_pairs)
