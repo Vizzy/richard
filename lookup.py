@@ -3,6 +3,7 @@ from itertools import filterfalse, chain, starmap
 from collections import defaultdict
 from multiprocessing.pool import Pool
 from concurrent import futures
+import asyncio
 import os
 from difflib import SequenceMatcher
 
@@ -19,9 +20,9 @@ class CrossLookup:
         self.translate_key = translate_key
         self.supported_directions = defaultdict(list)
         self.supported_langs = []
+        self.loop = asyncio.get_event_loop()
 
-        executor = futures.ThreadPoolExecutor(max_workers=1)
-        executor.submit(self.__get_languages)
+        self.loop.run_in_executor(None, self.__get_languages)
 
 
     def __get_languages(self):
@@ -40,8 +41,8 @@ class CrossLookup:
 
     def lookup(self, query, lang_from, lang_to, interface_lang='en'):
         lang = lang_from + '-' + lang_to
-        if lang not in self.supported_langs:
-            raise UnsupportedLanguageException
+        #if lang not in self.supported_langs:
+        #    raise UnsupportedLanguageException
 
         payload = {'key': self.apikey, 'lang': lang,
                     'text': query, 'ui': interface_lang}
@@ -61,6 +62,8 @@ class CrossLookup:
                 params=payload)
         result = json.loads(r.text)
         return result
+
+
 
     def partially_in(self, iterable, query, threshold=0.8):
         seqmatcher = SequenceMatcher(isjunk=None, b=query)
