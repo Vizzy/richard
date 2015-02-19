@@ -1,16 +1,7 @@
-from flask import (Flask, request, render_template,
+from flask import (request, render_template,
 					 jsonify, abort, json)
-from lookup import CrossLookup
+from richard import app, caw, lang_names
 from collections import defaultdict
-
-app = Flask('richard')
-app.config.from_object('config')
-
-caw = CrossLookup(apikey=app.config['DICT_APIKEY'], 
-				  translate_key=app.config['TRNSL_APIKEY'])
-
-with open('langs.json') as langsfile:
-	lang_names = json.load(langsfile)
 
 def get_lang():
 	# make it actually work out the language

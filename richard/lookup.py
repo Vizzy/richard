@@ -78,9 +78,9 @@ class CrossLookup:
 
     def meaning_overlaps(self, queries, translations):
         overlaps = []
-        num_workers = self.num_workers(queries)
+        num_workers = self.num_workers(translations)
 
-        with futures.ProcessPoolExecutor(max_workers=num_workers) as e:
+        with futures.ThreadPoolExecutor(max_workers=num_workers) as e:
             for t in translations:
                 meanings = [m['text'] for m in t.get('mean', [])]
                 examples = [ex['text'] for ex in t.get('ex', [])]

@@ -5,6 +5,6 @@ config.py
 
 *.js
 
-richenv
+env
 
 nc_*

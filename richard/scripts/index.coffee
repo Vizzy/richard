@@ -24,6 +24,17 @@ update_available_langs = ->
 
 		$('#langto_selector').append $new_lang_option
 
+textify = (value) ->
+	'<p>' + value + '</p>'
+
+$(document).on 'click', 'span.entry', (event) =>
+	console.log 'clicked'
+	entry = $(this).data 'entry'
+	div = $('div[data-entry=' + entry + ']')
+	console.log div.class
+	div.show()
+
+
 $(document).ready =>
 
 	get_langs()
@@ -46,25 +57,42 @@ $(document).ready =>
 		$.post('lookup/', payload).done (data) =>
 			results = JSON.parse data
 
+			# make this choose it according to language
+			$EXAMPLE_WORD = 'example'
+
 			$results_div = $('#results')
 
 			$results_div.hide 200, () ->
 				$results_div.empty()
 				if results['tr'] isnt undefined			
 					for t in results['tr']
-						$results_line = $('<p></p>')
+						$result_line = $('<div class="result"></div>')
+						entry = ''
+
+						if $DEBUG
+							console.log t['text'] + ' ' + t
 
 						for key, value of t
 
 							if key is 'pos'
-								$results_line.append '[' + value + '] '
+								entry += '[' + value + '] '
 							else if key is 'text'
-								$results_line.append value
-							else
-								if $DEBUG
-									console.log key, value
+								entry += value
+							else if key is 'ex' and value isnt undefined
+								$example_div = $('<div class="usage_example"></div>')
+								$example_div.attr("data-entry", t['text'])
+								$example_div.hide()
+								for ex in value
+									$example_div.append textify ex['text']
+									$example_div.append textify ex['tr']
 
-							$results_div.append $results_line
+						$entry_span = $('<span class="entry"></span>')
+						$entry_span.attr 'data-entry', t['text']
+						$entry_span.append textify entry
+						$result_line.append $entry_span
+						$result_line.append $example_div
+
+						$results_div.append $result_line
 
 				$results_div.fadeIn 200
 
