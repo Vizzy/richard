@@ -1,7 +1,12 @@
 {% extends "layout.jinja2" %}
 
 {% block scripts %}
-	<script type="text/javascript" src={{ url_for('static', filename='index.js') }}></script>
+	{% if config.get('USE_COFFEE_DIRECTLY') %}
+		<script type="text/coffeescript" src={{ url_for('serve_coffee', filename='index.coffee') }}>
+		</script>
+	{% else %}
+		<script type="text/javascript" src={{ url_for('static', filename='index.js') }}></script>
+	{% endif %}
 {% endblock %}
 
 {% block content %}

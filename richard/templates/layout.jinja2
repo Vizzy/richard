@@ -21,7 +21,7 @@
 	</script>
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
 
-	{% if config['DEBUG'] %}
+	{% if config.get('USE_COFFEE_DIRECTLY') %}
 		<script src={{ url_for('static', filename='coffee-script.js')| tojson }}></script>
 	{% endif %}
 	{% block scripts %}{% endblock %}
